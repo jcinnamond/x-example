@@ -1,0 +1,39 @@
+module Main where
+
+import Graphics.X11.Xlib
+import System.Exit (exitWith, ExitCode(..))
+import Control.Concurrent (threadDelay)
+
+main :: IO ()
+main = do
+ dpy <- openDisplay ""
+ let dflt = defaultScreen dpy
+     border = blackPixel dpy dflt
+     background = whitePixel dpy dflt
+ rootw <- rootWindow dpy dflt
+ win <- createSimpleWindow dpy rootw 0 0 100 100 1 border background
+ setTextProperty dpy win "Hello World" wM_NAME
+ mapWindow dpy win
+ drawInWin dpy win
+ sync dpy False
+ threadDelay (10 * 1000000)
+ exitWith ExitSuccess
+
+
+initColor :: Display -> String -> IO Pixel
+initColor dpy color = do
+ let colormap = defaultColormap dpy (defaultScreen dpy)
+ (approx,real) <- allocNamedColor dpy colormap color
+ return $ color_pixel approx
+
+
+drawInWin :: Display -> Window -> IO ()
+drawInWin dpy win = do
+ bgcolor <- initColor dpy "#303030"
+ fgcolor <- initColor dpy "#777777"
+ gc <- createGC dpy win
+ setForeground dpy gc fgcolor
+ fillRectangle dpy win gc 0 0 100 100
+ setForeground dpy gc fgcolor
+ fillRectangle dpy win gc 2 2 96 96
+ freeGC dpy gc
